@@ -232,7 +232,7 @@ export async function main(ns) {
 			if (numThreads <= 0) {
 				continue;
 			}
-			await ns.scp('./remote/doWeaken.js', name);
+			await ns.scp('/remote/doWeaken.js', name);
 			let weakenPid = ns.exec('/remote/doWeaken.js', name, numThreads, config.target)
 			let timeToWeaken = Math.floor(ns.getWeakenTime(config.target));
 			let running = {
@@ -279,7 +279,7 @@ export async function main(ns) {
 
 					ns.tprint("Should use " + useGrowThreads + " grow threads and " + useWeakenThreads + " weaken threads")
 
-					await ns.scp('./remote/doGrow.js', name);
+					await ns.scp('/remote/doGrow.js', name);
 					let timeToGrow = ns.getGrowTime(config.target);
 					let timeToWeaken = ns.getWeakenTime(config.target);
 					let growPid = 0;
@@ -298,7 +298,7 @@ export async function main(ns) {
 							ns.toast("Failed to create grow: " + useGrowThreads + " on " + name + " for " + config.target + " with sleep of " + Math.floor(timeToWeaken - timeToGrow - 10), 'error', null);
 							continue;
 						} else {
-							await ns.scp('./remote/doWeaken.js', name)
+							await ns.scp('/remote/doWeaken.js', name)
 							weakenPid = ns.exec('./remote/doWeaken.js', name, useWeakenThreads, config.target, 0, growPid);
 							if (weakenPid == 0) {
 								ns.toast('Failed to create weaken for grow ' + useWeakenThreads + ' on ' + name + ' with avail mem ' + (ns.getServer(name).maxRam - ns.getServer(name).ramUsed), 'error', null);
@@ -388,7 +388,7 @@ export async function main(ns) {
 
 			if (hackTime < weakenTime) {
 				ns.tprint("We should wait " + (weakenTime - hackTime - 10) + " milliseconds first before hacking HackThreads: " + hackThreads)
-				await ns.scp('./remote/doHack.js', name);
+				await ns.scp('/remote/doHack.js', name);
 				hackPid = ns.exec('./remote/doHack.js', name, hackThreads, config.target, Math.floor(weakenTime - hackTime - 10), "Hack");
 				ns.tprint("Hack pid: " + hackPid)
 				if (hackPid == 0) {
@@ -404,7 +404,7 @@ export async function main(ns) {
 				if (hackPid == 0) {
 					ns.toast("Failed to create hack thread");
 				} else {
-					await ns.scp('./remote/doWeaken.js', name);
+					await ns.scp('/remote/doWeaken.js', name);
 					weakenPid = ns.exec('./remote/doWeaken.js', name, weakenThreads, config.target, Math.floor(weakenTime - hackTime + 10), "Weaken after Hack 2");
 				}
 				if (weakenPid == 0) {
