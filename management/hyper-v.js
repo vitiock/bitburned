@@ -228,12 +228,12 @@ export async function main(ns) {
 
 			ns.tprint("We need more weakens!");
 
-			let numThreads = Math.floor(availRam / ns.getScriptRam('remote/doWeaken.js'))
+			let numThreads = Math.floor(availRam / ns.getScriptRam('./remote/doWeaken.js'))
 			if (numThreads <= 0) {
 				continue;
 			}
-			await ns.scp('remote/doWeaken.js', name);
-			let weakenPid = ns.exec('remote/doWeaken.js', name, numThreads, config.target)
+			await ns.scp('./remote/doWeaken.js', name);
+			let weakenPid = ns.exec('/remote/doWeaken.js', name, numThreads, config.target)
 			let timeToWeaken = Math.floor(ns.getWeakenTime(config.target));
 			let running = {
 				target: config.target,
@@ -252,7 +252,7 @@ export async function main(ns) {
 			activeThreads[targetServer.hostname].weaken += numThreads
 		} else if (targetServer.moneyAvailable < targetServer.moneyMax - 1) {
 			// We want growth to be neutral
-			let maxGrowThreads = Math.floor(availRam / ns.getScriptRam('remote/doGrow.js'))
+			let maxGrowThreads = Math.floor(availRam / ns.getScriptRam('./remote/doGrow.js'))
 			if (maxGrowThreads > 0) {
 				let desiredGrowth = targetServer.moneyMax / targetServer.moneyAvailable
 				if (desiredGrowth > 0) {
@@ -263,14 +263,14 @@ export async function main(ns) {
 						continue;
 					}
 					let useGrowThreads = Math.ceil(Math.min(requiredThreads, maxGrowThreads))
-					let availMem = availRam - (ns.getScriptRam('remote/doGrow.js') * useGrowThreads)
-					let useWeakenThreads = Math.min(Math.floor(availMem / Math.ceil(ns.getScriptRam('remote/doWeaken.js'))), Math.ceil(ns.growthAnalyzeSecurity(useGrowThreads) / .05))
+					let availMem = availRam - (ns.getScriptRam('./remote/doGrow.js') * useGrowThreads)
+					let useWeakenThreads = Math.min(Math.floor(availMem / Math.ceil(ns.getScriptRam('./remote/doWeaken.js'))), Math.ceil(ns.growthAnalyzeSecurity(useGrowThreads) / .05))
 
 					while (ns.weakenAnalyze(useWeakenThreads) < ns.growthAnalyzeSecurity(useGrowThreads)) {
 						useGrowThreads = useGrowThreads - 1;
-						availMem = availRam - (Math.ceil(ns.getScriptRam('remote/doGrow.js')) * useGrowThreads)
+						availMem = availRam - (Math.ceil(ns.getScriptRam('./remote/doGrow.js')) * useGrowThreads)
 						ns.tprint("Avail ram for weaken: " + availMem + " and grow threads " + useGrowThreads)
-						useWeakenThreads = Math.floor(availMem / Math.ceil(ns.getScriptRam('remote/doWeaken.js')))
+						useWeakenThreads = Math.floor(availMem / Math.ceil(ns.getScriptRam('./remote/doWeaken.js')))
 					}
 
 					if (useGrowThreads <= 0) {
@@ -279,7 +279,7 @@ export async function main(ns) {
 
 					ns.tprint("Should use " + useGrowThreads + " grow threads and " + useWeakenThreads + " weaken threads")
 
-					await ns.scp('remote/doGrow.js', name);
+					await ns.scp('./remote/doGrow.js', name);
 					let timeToGrow = ns.getGrowTime(config.target);
 					let timeToWeaken = ns.getWeakenTime(config.target);
 					let growPid = 0;
@@ -290,16 +290,16 @@ export async function main(ns) {
 					} else {
 						ns.tprint("We should wait " + (timeToWeaken - timeToGrow - 10) + " milliseconds first before growing")
 						let timeToWait = Math.floor(timeToWeaken - timeToGrow - 10)
-						growPid = ns.exec('remote/doGrow.js', name, useGrowThreads+1, config.target, timeToWait, "From growth section", 0, Date.now());
+						growPid = ns.exec('./remote/doGrow.js', name, useGrowThreads+1, config.target, timeToWait, "From growth section", 0, Date.now());
 						if(growPid == 0){
-							if(ns.isRunning('remote/doGrow.js', name)) {
+							if(ns.isRunning('./remote/doGrow.js', name)) {
 								ns.toast("Failed due to script already running");
 							}
 							ns.toast("Failed to create grow: " + useGrowThreads + " on " + name + " for " + config.target + " with sleep of " + Math.floor(timeToWeaken - timeToGrow - 10), 'error', null);
 							continue;
 						} else {
-							await ns.scp('remote/doWeaken.js', name)
-							weakenPid = ns.exec('remote/doWeaken.js', name, useWeakenThreads, config.target, 0, growPid);
+							await ns.scp('./remote/doWeaken.js', name)
+							weakenPid = ns.exec('./remote/doWeaken.js', name, useWeakenThreads, config.target, 0, growPid);
 							if (weakenPid == 0) {
 								ns.toast('Failed to create weaken for grow ' + useWeakenThreads + ' on ' + name + ' with avail mem ' + (ns.getServer(name).maxRam - ns.getServer(name).ramUsed), 'error', null);
 							} else {
@@ -333,16 +333,16 @@ export async function main(ns) {
 			let gain = ns.hackAnalyze(config.target);
 			let neededThreads = Math.ceil(.15 / gain);
 
-			let maxThreads = Math.floor(availRam / ns.getScriptRam('remote/doHack.js'))
+			let maxThreads = Math.floor(availRam / ns.getScriptRam('./remote/doHack.js'))
 			if (maxThreads <= 0) {
 				continue;
 			}
 
 			let hackThreads = Math.min(maxThreads, neededThreads)
-			let weakenThreads = Math.min((availRam - (hackThreads * ns.getScriptRam('remote/doHack.js'))) / ns.getScriptRam('remote/weaken.js'), Math.ceil(ns.hackAnalyzeSecurity(hackThreads+1)/.05));
+			let weakenThreads = Math.min((availRam - (hackThreads * ns.getScriptRam('./remote/doHack.js'))) / ns.getScriptRam('./remote/weaken.js'), Math.ceil(ns.hackAnalyzeSecurity(hackThreads+1)/.05));
 			while (ns.hackAnalyzeSecurity(hackThreads) > ns.weakenAnalyze(weakenThreads)) {
 				hackThreads = hackThreads - 1;
-				weakenThreads = Math.min((availRam - (hackThreads * ns.getScriptRam('remote/doHack.js'))) / ns.getScriptRam('remote/weaken.js'), Math.ceil(ns.hackAnalyzeSecurity(hackThreads+1)/.05));
+				weakenThreads = Math.min((availRam - (hackThreads * ns.getScriptRam('./remote/doHack.js'))) / ns.getScriptRam('./remote/weaken.js'), Math.ceil(ns.hackAnalyzeSecurity(hackThreads+1)/.05));
 			}
 
 			let hackSize = hackThreads * ns.getScriptRam("remote/doHack.js");
@@ -364,17 +364,17 @@ export async function main(ns) {
 			let shouldGrow = false;
 			let shouldWeaken = false;
 
-			if( remainingRam > growthThreads * ns.getScriptRam('remote/doGrow.js')){
+			if( remainingRam > growthThreads * ns.getScriptRam('./remote/doGrow.js')){
 				shouldGrow = true;
 			}
 
-			remainingRam -= (growthThreads * ns.getScriptRam('remote/doGrow.js'));
+			remainingRam -= (growthThreads * ns.getScriptRam('./remote/doGrow.js'));
 
 			let growthWeakenThreads = Math.ceil(ns.growthAnalyzeSecurity(growthThreads)/.05)
 			while(ns.weakenAnalyze(growthWeakenThreads) < ns.growthAnalyzeSecurity(growthThreads)){
 				growthWeakenThreads++;
 			}
-			if(remainingRam > growthWeakenThreads * ns.getScriptRam('remote/doWeaken.js')){
+			if(remainingRam > growthWeakenThreads * ns.getScriptRam('./remote/doWeaken.js')){
 				shouldWeaken = true;
 			}
 
@@ -388,24 +388,24 @@ export async function main(ns) {
 
 			if (hackTime < weakenTime) {
 				ns.tprint("We should wait " + (weakenTime - hackTime - 10) + " milliseconds first before hacking HackThreads: " + hackThreads)
-				await ns.scp('remote/doHack.js', name);
-				hackPid = ns.exec('remote/doHack.js', name, hackThreads, config.target, Math.floor(weakenTime - hackTime - 10), "Hack");
+				await ns.scp('./remote/doHack.js', name);
+				hackPid = ns.exec('./remote/doHack.js', name, hackThreads, config.target, Math.floor(weakenTime - hackTime - 10), "Hack");
 				ns.tprint("Hack pid: " + hackPid)
 				if (hackPid == 0) {
 					ns.toast("Failed to create hack threads " + hackThreads, 'error')
 				} else {					
-					weakenPid = ns.exec('remote/doWeaken.js', name, weakenThreads, config.target, 0, "Weaken after hack 1");
-					growPid = ns.exec('remote/doGrow.js', name, growthThreads, config.target, (weakenTime-growTime+10), "Hack");
-					weakenPid = ns.exec('remote/doWeaken.js', name, growthWeakenThreads*2, config.target, 20, "Weaken after grow for hack");
+					weakenPid = ns.exec('./remote/doWeaken.js', name, weakenThreads, config.target, 0, "Weaken after hack 1");
+					growPid = ns.exec('./remote/doGrow.js', name, growthThreads, config.target, (weakenTime-growTime+10), "Hack");
+					weakenPid = ns.exec('./remote/doWeaken.js', name, growthWeakenThreads*2, config.target, 20, "Weaken after grow for hack");
 				}
 			} else {
 				ns.tprint("We should wait " + (hackTime - weakenTime - 10) + " milliseconds first before weakening")
-				hackPid = ns.exec('remote/doHack.js', name, hackThreads, config.target, Math.floor(0), "Hacking");
+				hackPid = ns.exec('./remote/doHack.js', name, hackThreads, config.target, Math.floor(0), "Hacking");
 				if (hackPid == 0) {
 					ns.toast("Failed to create hack thread");
 				} else {
-					await ns.scp('remote/doWeaken.js', name);
-					weakenPid = ns.exec('remote/doWeaken.js', name, weakenThreads, config.target, Math.floor(weakenTime - hackTime + 10), "Weaken after Hack 2");
+					await ns.scp('./remote/doWeaken.js', name);
+					weakenPid = ns.exec('./remote/doWeaken.js', name, weakenThreads, config.target, Math.floor(weakenTime - hackTime + 10), "Weaken after Hack 2");
 				}
 				if (weakenPid == 0) {
 					ns.toast("Failed to create hack thread");
