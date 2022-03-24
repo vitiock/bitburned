@@ -12,8 +12,7 @@ function getUpperSpend(ns) {
 
 /** @param {NS} ns **/
 export async function main(ns) {
-	return;	
-
+	return;
 	while(ns.hacknet.maxNumNodes() > ns.hacknet.numNodes() && ns.hacknet.getPurchaseNodeCost() < getUpperSpend(ns)) {
 		ns.hacknet.purchaseNode();		
 		ns.toast("Purchased Hacknet Node");
@@ -27,7 +26,7 @@ export async function main(ns) {
 			if(ns.hacknet.getLevelUpgradeCost(i) < getUpperSpend(ns)) {
 				ns.hacknet.upgradeLevel(i);
 				purchased = true;
-				ns.toast("Purchased hacknet Level")
+//				ns.toast("Purchased hacknet Level")
 //				return;
 			}		
 		}
@@ -35,7 +34,7 @@ export async function main(ns) {
 			if(ns.hacknet.getRamUpgradeCost(i) < getUpperSpend(ns)) {
 				ns.hacknet.upgradeRam(i);
 				purchased = true;
-				ns.toast("Purchased hacknet Ram")
+//				ns.toast("Purchased hacknet Ram")
 //				return;
 			}		
 		}
@@ -43,7 +42,7 @@ export async function main(ns) {
 			if(ns.hacknet.getCoreUpgradeCost(i) < getUpperSpend(ns)) {
 				ns.hacknet.upgradeCore(i);
 				purchased = true;
-				ns.toast("Purchased hacknet Core")
+//				ns.toast("Purchased hacknet Core")
 //				return;
 			}		
 		}
