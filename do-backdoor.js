@@ -37,7 +37,15 @@ function expand(ns, hostname, previousHost, path) {
 export async function main(ns) {
   let paths = expand(ns, 'home', null, Array());
 
-  paths.map(path => {
-    ns.tprint("connect " + path.join('; connect ') + ";backdoor");
-  })
+  for(let index = 0; index < paths.length; index++){
+    let path = paths[index];
+    for(let i = 1; i < path.length; i++){
+      ns.connect(path[i]);
+      ns.toast("Backdooring: " + path[i]);
+    }
+    await ns.installBackdoor();
+    for(let i = path.length; i < path.length; iii){
+      ns.connect(path[i]);
+    }
+  }
 }

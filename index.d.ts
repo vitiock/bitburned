@@ -7007,3 +7007,29 @@ interface AutocompleteData {
   txts: string[];
   flags(schema: [string, string | number | boolean | string[]][]): any;
 }
+
+export interface Job {
+  task: string;
+  target: string;
+  requiredMem: number;
+}
+
+export interface WeakenJob extends Job {
+  weakenThreads: number;
+}
+
+export interface GrowJob extends Job {
+  weakenThreads: number;
+  growThreads: number;
+}
+
+export interface ReapJob extends Job {
+}
+
+export interface Task {
+  pid: number;
+  action: string;
+  threads: number;
+  target: string;
+  host: string;
+}

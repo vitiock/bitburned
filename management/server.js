@@ -1,9 +1,10 @@
+// TODO: Move this to a loop, that will die once max server size is reached, to reduce running this over and over and over again.
+
 /** @param {NS} ns **/
 export async function main(ns) {
 	let currentServers = ns.getPurchasedServers();
 	let currentHosts = [];
 	currentServers.map((hostName) => currentHosts.push(ns.getServer(hostName)));
-
 
 	if(currentServers.length < 25){
 		let ramSize = 8;
@@ -18,11 +19,13 @@ export async function main(ns) {
 			return a.maxRam - b.maxRam;
 		})
 
+
 		ns.toast("Current server ram spread (" + min[0].maxRam + ", " + min[24].maxRam + ")", 'info')
 
 		let minRam = min[0].maxRam;
 		
 		let ramSize = minRam;
+
 		while(ns.getPlayer().money > ns.getPurchasedServerCost(ramSize)){
 			ramSize = ramSize * 2;
 		}
@@ -40,6 +43,4 @@ export async function main(ns) {
 			}
 		}
 	}
-
-
 }

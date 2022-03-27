@@ -3,6 +3,7 @@ const argsSchema = [
   ['sleep', 0],
   ['expectedweakens', 1],
   ['expectedgrows', 1],
+  ['reapPercentage', 5],
 ]
 
 export function autocomplete(data, args) {
@@ -23,7 +24,7 @@ export async function main(ns) {
     weakenThreads += 1;
   }
 
-  weakenThreads += 2;
+  weakenThreads += 5;
 
   if( hacked > 0) {
     if (flags['expectedweakens'] != weakenThreads) {
@@ -31,24 +32,24 @@ export async function main(ns) {
     }
 
 
-    let growThreads = Math.ceil(ns.growthAnalyze(flags['target'], server.moneyMax / server.moneyAvailable)) + 2;
+    let growThreads = Math.ceil(ns.growthAnalyze(flags['target'], server.moneyMax / server.moneyAvailable)) + 5;
     if (flags['expectedgrows'] != growThreads) {
       ns.toast('Expected grow threads: ' + flags['expectedgrows'] + " Actual grow threads required: " + Math.ceil(growThreads), 'info', 5000);
     }
 
     if (flags['expectedgrows'] != growThreads || flags['expectedweakens'] != weakenThreads) {
-      let reapJson = ns.read('/reap/reap-' + flags['target'] + '-5.txt');
+      let reapJson = ns.read('/reap/reap-' + flags['target'] + '-'+flags['reapPercentage']+'.txt');
       let reapConfig = JSON.parse(reapJson);
       reapConfig.grow = growThreads;
       reapConfig.hackWeaken = weakenThreads;
-      await ns.write('/reap/reap-' + flags['target'] + '-5.txt', JSON.stringify(reapConfig), 'w');
-      await ns.scp('/reap/reap-' + flags['target'] + '-5.txt', 'home');
+      await ns.write('/reap/reap-' + flags['target'] + '-'+flags['reapPercentage']+'.txt', JSON.stringify(reapConfig), 'w');
+      await ns.scp('/reap/reap-' + flags['target'] + '-'+flags['reapPercentage']+'.txt', 'home');
     } else {
-      let reapJson = ns.read('/reap/reap-' + flags['target'] + '-5.txt');
+      let reapJson = ns.read('/reap/reap-' + flags['target'] + '-'+flags['reapPercentage']+'.txt');
       let reapConfig = JSON.parse(reapJson);
       reapConfig.hackDebug = false;
-      await ns.write('/reap/reap-' + flags['target'] + '-5.txt', JSON.stringify(reapConfig), 'w');
-      await ns.scp('/reap/reap-' + flags['target'] + '-5.txt', 'home');
+      await ns.write('/reap/reap-' + flags['target'] + '-'+flags['reapPercentage']+'.txt', JSON.stringify(reapConfig), 'w');
+      await ns.scp('/reap/reap-' + flags['target'] + '-'+flags['reapPercentage']+'.txt', 'home');
     }
 
     ns.toast("Hacked " + hacked + " moneys from: " + flags['target']);

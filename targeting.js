@@ -23,5 +23,5 @@ export function getExploitableServers(ns) {
  * @param {number} percent
  */
 export function canReap(ns, server, percent) {
-  return ns.fileExists('/reap/' + percent + '-' + server.hostname)
+  return ns.fileExists('/reap/reap-'+ server.hostname + '-'+percent.toString()+'.txt');
 }

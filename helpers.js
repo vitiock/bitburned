@@ -12,7 +12,7 @@ export function getOwnedServers(ns) {
     scanned.push(name);
 
     let server = ns.getServer(name);
-    if (server.hasAdminRights && server.hackDifficulty != 0 && server.requiredHackingSkill <= ns.getPlayer().hacking) {
+    if (server.hasAdminRights) {
       hostList.push(server);
       let hosts = ns.scan(name);
       for (let i = 0; i < hosts.length; i++) {
@@ -54,5 +54,23 @@ export function nFormatter(num, digits) {
  * @param {Server} server
  */
 export function getFreeRam(server) {
+  if (server.hostname === 'home') {
+    return server.maxRam - server.ramUsed - 16;
+  }
   return server.maxRam - server.ramUsed;
+}
+
+/**
+ *
+ * @param {NS} ns
+ * @param {string[]} hostnames
+ * @returns {Server[]}
+ */
+export function expandHostnames(ns, hostnames) {
+  let servers = [];
+  hostnames.map( (hostname) => {
+    servers.push(ns.getServer(hostname));
+  })
+
+  return servers;
 }

@@ -2,6 +2,7 @@ const argsSchema = [
   ['target', 'n00dles'],
   ['sleep', 0],
   ['expectedweakens', 1],
+  ['reapPercentage', 5]
 ]
 
 export function autocomplete(data, args) {
@@ -21,6 +22,7 @@ export async function main(ns) {
   while(ns.weakenAnalyze(weakenThreads, 1) < server.hackDifficulty - server.minDifficulty) {
     weakenThreads += 1;
   }
+  weakenThreads += 2;
 
   if(flags['expectedweakens'] != weakenThreads) {
     ns.toast("Expected threads: " + flags['expectedweakens'] + " Actual weaken threads required: " + weakenThreads, 'info', 5000);
@@ -28,19 +30,19 @@ export async function main(ns) {
 
 
   if(flags['expectedweakens'] != weakenThreads){
-    let reapJson = ns.read('/reap/reap-'+flags['target']+'-5.txt');
+    let reapJson = ns.read('/reap/reap-'+flags['target']+'-'+flags['reapPercentage']+'.txt');
     let reapConfig = JSON.parse(reapJson);
     reapConfig.growWeaken = weakenThreads;
     reapConfig.hackDebug = true;
-    await ns.write('/reap/reap-'+flags['target']+'-5.txt', JSON.stringify(reapConfig), 'w');
-    await ns.scp('/reap/reap-'+flags['target']+'-5.txt', 'home');
+    await ns.write('/reap/reap-'+flags['target']+'-'+flags['reapPercentage']+'.txt', JSON.stringify(reapConfig), 'w');
+    await ns.scp('/reap/reap-'+flags['target']+'-'+flags['reapPercentage']+'.txt', 'home');
   } else {
-    let reapJson = ns.read('/reap/reap-'+flags['target']+'-5.txt');
+    let reapJson = ns.read('/reap/reap-'+flags['target']+'-'+flags['reapPercentage']+'.txt');
     let reapConfig = JSON.parse(reapJson);
     if(!reapConfig.hackDebug) {
       reapConfig.debug = false;
     }
-    await ns.write('/reap/reap-'+flags['target']+'-5.txt', JSON.stringify(reapConfig), 'w');
-    await ns.scp('/reap/reap-'+flags['target']+'-5.txt', 'home');
+    await ns.write('/reap/reap-'+flags['target']+'-'+flags['reapPercentage']+'.txt', JSON.stringify(reapConfig), 'w');
+    await ns.scp('/reap/reap-'+flags['target']+'-'+flags['reapPercentage']+'.txt', 'home');
   }
 }
