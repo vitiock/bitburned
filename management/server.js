@@ -1,5 +1,7 @@
 // TODO: Move this to a loop, that will die once max server size is reached, to reduce running this over and over and over again.
 
+import {nFormatter} from "./helpers.js";
+
 /** @param {NS} ns **/
 export async function main(ns) {
 	let currentServers = ns.getPurchasedServers();
@@ -7,13 +9,11 @@ export async function main(ns) {
 	currentServers.map((hostName) => currentHosts.push(ns.getServer(hostName)));
 
 	if(currentServers.length < 25){
-		let ramSize = 8;
-		while(ns.getPlayer().money > ns.getPurchasedServerCost(ramSize)){
-			ramSize = ramSize * 2;
-		}
-		if( ramSize > 8) {
-			ns.purchaseServer("hax-" + ns.getPurchasedServers().length, ramSize/2)
-		}
+			if( ns.purchaseServer("hax-" + ns.getPurchasedServers().length, 128).length > 0){
+				ns.toast("Bought a new server with 128GB of ram");
+			} else {
+				ns.toast(ns.getPurchasedServerCost(128));
+			}
 	} else {
 		let min = currentHosts.sort((a, b) => {
 			return a.maxRam - b.maxRam;

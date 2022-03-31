@@ -38,18 +38,26 @@ export async function main(ns) {
     }
 
     if (flags['expectedgrows'] != growThreads || flags['expectedweakens'] != weakenThreads) {
-      let reapJson = ns.read('/reap/reap-' + flags['target'] + '-'+flags['reapPercentage']+'.txt');
-      let reapConfig = JSON.parse(reapJson);
-      reapConfig.grow = growThreads;
-      reapConfig.hackWeaken = weakenThreads;
-      await ns.write('/reap/reap-' + flags['target'] + '-'+flags['reapPercentage']+'.txt', JSON.stringify(reapConfig), 'w');
-      await ns.scp('/reap/reap-' + flags['target'] + '-'+flags['reapPercentage']+'.txt', 'home');
+      try {
+        let reapJson = ns.read('/reap/reap-' + flags['target'] + '-' + flags['reapPercentage'] + '.txt');
+        let reapConfig = JSON.parse(reapJson);
+        reapConfig.grow = growThreads;
+        reapConfig.hackWeaken = weakenThreads;
+        await ns.write('/reap/reap-' + flags['target'] + '-' + flags['reapPercentage'] + '.txt', JSON.stringify(reapConfig), 'w');
+        await ns.scp('/reap/reap-' + flags['target'] + '-' + flags['reapPercentage'] + '.txt', 'home');
+      } catch (e) {
+        ns.print("Looks like debug was set despite debug already being run");
+      }
     } else {
-      let reapJson = ns.read('/reap/reap-' + flags['target'] + '-'+flags['reapPercentage']+'.txt');
-      let reapConfig = JSON.parse(reapJson);
-      reapConfig.hackDebug = false;
-      await ns.write('/reap/reap-' + flags['target'] + '-'+flags['reapPercentage']+'.txt', JSON.stringify(reapConfig), 'w');
-      await ns.scp('/reap/reap-' + flags['target'] + '-'+flags['reapPercentage']+'.txt', 'home');
+      try {
+        let reapJson = ns.read('/reap/reap-' + flags['target'] + '-' + flags['reapPercentage'] + '.txt');
+        let reapConfig = JSON.parse(reapJson);
+        reapConfig.hackDebug = false;
+        await ns.write('/reap/reap-' + flags['target'] + '-' + flags['reapPercentage'] + '.txt', JSON.stringify(reapConfig), 'w');
+        await ns.scp('/reap/reap-' + flags['target'] + '-' + flags['reapPercentage'] + '.txt', 'home');
+      } catch (e) {
+        ns.print("Looks like debug was set despite debug already being run");
+      }
     }
 
     ns.toast("Hacked " + hacked + " moneys from: " + flags['target']);

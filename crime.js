@@ -7,17 +7,22 @@ export async function main(ns) {
     if(!ns.isBusy()) {
       let profit = 0;
       let doCrime = 'shoplift';
-      crimes.map(crime => {
+      for (let crime of crimes) {
         let chance = ns.getCrimeChance(crime);
         let stats = ns.getCrimeStats(crime);
         let time = stats.time/1000;
+        if (time > 60){
+          continue;
+        }
+        ns.print(crime + " === " + ((stats.money/time)*chance))
         if( ((stats.money/time)*chance) > profit) {
           profit = ((stats.money/time)*chance);
           doCrime = crime;
         }
-      })
+      }
 
       sleepTime = ns.commitCrime(doCrime);
+      ns.print("Work type: " + ns.getPlayer().workType)
       ns.tail('crime.js');
     }
     await ns.sleep(sleepTime+100);

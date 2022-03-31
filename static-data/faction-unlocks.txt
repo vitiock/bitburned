@@ -1,0 +1,6 @@
+[
+    {
+        "name": "Slum Snakes",
+        "unlockAction": "crime"
+    }
+]

@@ -118,11 +118,13 @@ async function scheduleWeaken(ns, job){
   }
 
   let servers = getOwnedServers(ns);
-  servers = servers.sort( (a, b) => getFreeRam(b) - getFreeRam(a));
+  // Go from minimum to maximum ram to keep bigger hosts for reaps
+  servers = servers.sort( (a, b) => getFreeRam(a) - getFreeRam(b));
   let lastPid = 0;
   let lastHost = '';
   for(let i = 0; i < servers.length; i++){
     let server = servers[i];
+    ns.print("Attempting to schedule weaken on " + server.hostname);
     let remainingThreads = job.weakenThreads - totalScheduled;
     if(remainingThreads <= 0) {
       return;
@@ -130,8 +132,8 @@ async function scheduleWeaken(ns, job){
     let freeRam = getFreeRam(server);
     let canRunThreads = Math.floor(freeRam / ns.getScriptRam('/remote/doWeaken.js'));
     let threadsToRun = Math.min(canRunThreads, remainingThreads);
-    ns.tprint(remainingThreads + ":" + canRunThreads);
     if( threadsToRun > 0) {
+      await ns.scp('/remote/doWeaken.js', 'home', server.hostname)
       let pid = ns.exec('/remote/doWeaken.js', server.hostname, threadsToRun, job.target, 0)
       if ( pid != 0) {
         totalScheduled += threadsToRun;
@@ -234,6 +236,7 @@ async function scheduleReap(ns, job) {
  * @returns
  */
 async function scheduleGrow(ns, job){
+  ns.print("scheduling grow against " + job.target)
   clearReapsForHost(ns, job.target);
   let totalScheduled = 0;
   let startingThreads = 0;
@@ -242,11 +245,9 @@ async function scheduleGrow(ns, job){
     startingThreads = activeThreads[job.target][GROW];
   }
 
-  let purchasedServers = ns.getPurchasedServers();
+  let servers = getOwnedServers(ns);
   let totalWeakensScheduled = 0;
-  let servers = [];
-  purchasedServers.map( hostname => servers.push(ns.getServer(hostname)));
-  servers = servers.sort( (a, b) => getFreeRam(b) - getFreeRam(a));
+  servers = servers.sort( (a, b) => getFreeRam(a) - getFreeRam(b));
   let lastPid = 0;
   let lastWeakenPid = 0;
   let lastHost = '';
@@ -258,10 +259,10 @@ async function scheduleGrow(ns, job){
     let canRunThreads = Math.floor(freeRam / ns.getScriptRam('/remote/doGrow.js'));
     let threadsToRun = Math.min(canRunThreads, remainingThreads);
     if( threadsToRun > 0) {
-
+      ns.print("Remaining threads: " + threadsToRun);
       let calculateWeakensForGrow = (growThreads) => {
-        let weakenThreads = 1;
-        while (ns.weakenAnalyze(weakenThreads) < ns.growthAnalyzeSecurity(growThreads)) {
+        let weakenThreads = 2;
+        while (ns.weakenAnalyze(weakenThreads-1) < ns.growthAnalyzeSecurity(growThreads)) {
           weakenThreads += 1;
         }
         return weakenThreads;
@@ -271,12 +272,13 @@ async function scheduleGrow(ns, job){
         threadsToRun -= 1;
       }
       let weakenThreads = calculateWeakensForGrow(threadsToRun);
-      if(threadsToRun === 0 || weakenThreads === 0) {
-        return;
+      if(threadsToRun <= 0 || weakenThreads <= 0) {
+        ns.print("Too little ram to run grow on " + server.hostname);
+        continue;
       }
 
       await ns.scp('/remote/doGrow.js', 'home', server.hostname);
-      let pid = ns.exec('/remote/doGrow.js', server.hostname, threadsToRun, '--target', job.target, '--sleep', 0, '--expectedweakens', weakenThreads, '--reapPercentage', 0);
+      let pid = ns.exec('/remote/doGrow.js', server.hostname, threadsToRun, '--target', job.target, '--sleep', 0, '--expectedweakens', weakenThreads, '--reapPercentage', 0, '--manipulateStock', false);
       if ( pid != 0) {
         totalScheduled += threadsToRun;
         lastPid = pid;
@@ -292,6 +294,8 @@ async function scheduleGrow(ns, job){
           ns.toast("Failed to schedule weakens for grow pid:" + pid + " threads: " + weakenThreads, 'error');
         }
       }
+    } else {
+      ns.print("Threads to run < 0");
     }
   }
 
@@ -347,6 +351,8 @@ function createJobsForServers(ns, servers) {
 
 /** @param {NS} ns **/
 export async function main(ns) {
+  ns.disableLog('scan');
+  ns.disableLog('scp');
     ns.tprint("Starting Hack Manager");
 
     if(ns.fileExists('tasks.txt')){
@@ -414,9 +420,9 @@ export async function main(ns) {
         }
         let threads = (executor.maxRam - executor.ramUsed) / ns.getScriptRam('/remote/doGrow.js');
         if (Math.floor(threads) > 0) {
-          //ns.tprint("boop: " + server.hostname + " " + threads);
           await ns.scp('/remote/doGrow.js', 'home', executor.hostname)
-          let idlePid = ns.exec('/remote/doGrow.js', executor.hostname, Math.floor(threads), '--target', 'joesguns');
+
+          let idlePid = ns.exec('/remote/doGrow.js', executor.hostname, Math.floor(threads), '--target', 'joesguns', '--manipulateStock', true);
           if(idlePid != 0) {
             totalGrows += Math.floor(threads);
             addTask({
@@ -427,6 +433,7 @@ export async function main(ns) {
               pid: idlePid
             });
           }
+
         }
       }
       if(totalGrows > 0) {

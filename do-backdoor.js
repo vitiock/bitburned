@@ -18,7 +18,11 @@ function expand(ns, hostname, previousHost, path) {
   path.push(hostname)
 
   let allPaths = [];
-  if(!server.backdoorInstalled && (server.hostname === 'avmnite-02h' || server.hostname === 'I.I.I.I' || server.hostname === 'run4theh111z' || server.hostname === 'CSEC' || server.hostname === 'w0r1d_d43m0n')) {
+  if(!server.backdoorInstalled &&
+    server.requiredHackingSkill < ns.getPlayer().hacking &&
+    !server.hostname.startsWith('hax-') &&
+    server.hostname !== 'home') {
+    ns.toast("Server difficulty: " + server.requiredHackingSkill);
     allPaths.push(path);
   }
 
@@ -40,11 +44,14 @@ export async function main(ns) {
   for(let index = 0; index < paths.length; index++){
     let path = paths[index];
     for(let i = 1; i < path.length; i++){
+      ns.tprint("Going to: " + path[i])
       ns.connect(path[i]);
-      ns.toast("Backdooring: " + path[i]);
     }
+    ns.toast("Installing backdoor on: " + path[path.length-1]);
     await ns.installBackdoor();
-    for(let i = path.length; i < path.length; iii){
+    await ns.sleep(10);
+    for(let i = path.length-2; i >= 0; i--){
+      ns.tprint("Backtracking home via: " + path[i])
       ns.connect(path[i]);
     }
   }

@@ -30,19 +30,27 @@ export async function main(ns) {
 
 
   if(flags['expectedweakens'] != weakenThreads){
-    let reapJson = ns.read('/reap/reap-'+flags['target']+'-'+flags['reapPercentage']+'.txt');
-    let reapConfig = JSON.parse(reapJson);
-    reapConfig.growWeaken = weakenThreads;
-    reapConfig.hackDebug = true;
-    await ns.write('/reap/reap-'+flags['target']+'-'+flags['reapPercentage']+'.txt', JSON.stringify(reapConfig), 'w');
-    await ns.scp('/reap/reap-'+flags['target']+'-'+flags['reapPercentage']+'.txt', 'home');
-  } else {
-    let reapJson = ns.read('/reap/reap-'+flags['target']+'-'+flags['reapPercentage']+'.txt');
-    let reapConfig = JSON.parse(reapJson);
-    if(!reapConfig.hackDebug) {
-      reapConfig.debug = false;
+    try {
+      let reapJson = ns.read('/reap/reap-' + flags['target'] + '-' + flags['reapPercentage'] + '.txt');
+      let reapConfig = JSON.parse(reapJson);
+      reapConfig.growWeaken = weakenThreads;
+      reapConfig.hackDebug = true;
+      await ns.write('/reap/reap-' + flags['target'] + '-' + flags['reapPercentage'] + '.txt', JSON.stringify(reapConfig), 'w');
+      await ns.scp('/reap/reap-' + flags['target'] + '-' + flags['reapPercentage'] + '.txt', 'home');
+    } catch (e) {
+      ns.print("Looks like status was set back to debug despite debug already running")
     }
-    await ns.write('/reap/reap-'+flags['target']+'-'+flags['reapPercentage']+'.txt', JSON.stringify(reapConfig), 'w');
-    await ns.scp('/reap/reap-'+flags['target']+'-'+flags['reapPercentage']+'.txt', 'home');
+  } else {
+    try {
+      let reapJson = ns.read('/reap/reap-' + flags['target'] + '-' + flags['reapPercentage'] + '.txt');
+      let reapConfig = JSON.parse(reapJson);
+      if (!reapConfig.hackDebug) {
+        reapConfig.debug = false;
+      }
+      await ns.write('/reap/reap-' + flags['target'] + '-' + flags['reapPercentage'] + '.txt', JSON.stringify(reapConfig), 'w');
+      await ns.scp('/reap/reap-' + flags['target'] + '-' + flags['reapPercentage'] + '.txt', 'home');
+    } catch (e) {
+      ns.print("Looks like status was set back to debug despite debug already running")
+    }
   }
 }
