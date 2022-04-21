@@ -17,37 +17,36 @@ export async function main(ns) {
 				}
 				await ns.sleep(100);
 			}
-		} else if (!server.hasAdminRights) {	
-			ns.print("Attempting to gain access to: " + name)		
+		} else if (!server.hasAdminRights) {
+			ns.print("Attempting to gain access to: " + name)
 			if(ns.fileExists('BruteSSH.exe', 'home') && !server.sshPortOpen){
-				ns.tprint("Opening ssh port on: " + name)
+				ns.print("Opening ssh port on: " + name)
 				ns.brutessh(name);
 			}
 
 			if(ns.fileExists('FTPCrack.exe', 'home') && !server.ftpPortOpen){
-				ns.tprint("Opening ftp port on: " + name)
+				ns.print("Opening ftp port on: " + name)
 				ns.ftpcrack(name);
 			}
 
 			if(ns.fileExists('relaySMTP.exe', 'home') && !server.smtpPortOpen){
-				ns.toast("Opening SMTP port on: " + name)
+				ns.print("Opening SMTP port on: " + name)
 				ns.relaysmtp(name);
 			}
 
 			if(ns.fileExists('HTTPWorm.exe', 'home') && !server.httpPortOpen) {
-				ns.toast("Opening HTTP port on: " + name)
+				ns.print("Opening HTTP port on: " + name)
 				ns.httpworm(name);
 			}
 
 			if(ns.fileExists('SQLInject.exe', 'home') && !server.sqlPortOpen) {
-				ns.toast("Opening SQL port on: " + name)
+				ns.print("Opening SQL port on: " + name)
 				ns.sqlinject(name);
 			}
 
 			if(server.openPortCount >= server.numOpenPortsRequired && server.requiredHackingSkill <= ns.getPlayer().hacking) {				
 				ns.toast("Nuking server: " + name)
 				ns.nuke(name);
-				await ns.scp('hack.js', name)
 			}
 		} else {
 			if(!server.backdoorInstalled) {

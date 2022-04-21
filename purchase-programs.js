@@ -13,24 +13,29 @@ export async function main(ns) {
         ns.toast("Purchased BruteSSH.exe");
       }
     }
+
     if (!hasFTPCrack && ns.getPlayer().money > 1500000) {
       hasFTPCrack = ns.purchaseProgram('FTPCrack.exe');
       ns.toast("Purchased FTPCrack.exe", 'info', 10000);
     }
+
     if (!hasRelaySMTP && ns.getPlayer().money > 5000000) {
       hasRelaySMTP = ns.purchaseProgram('relaySMTP.exe');
       ns.toast("Purchased relaySMTP.exe", 'info', 10000);
     }
+
     if (!hasHTTPWorm && ns.getPlayer().money > 30000000) {
       hasHTTPWorm = ns.purchaseProgram('HTTPWorm.exe');
       if(hasHTTPWorm) {
         ns.toast("Purchased HTTPWorm.exe", 'info', 10000);
       }
     }
-    if (hasSQLInject && ns.getPlayer().money > 250000000) {
+
+    if (!hasSQLInject && ns.getPlayer().money > 250000000) {
       hasSQLInject = ns.purchaseProgram('SQLInject.exe');
-      ns.toast("Purchased SQLInject.exe", 'info', 10000);
+      ns.toast("Purchased SQLInject.exe", 'info', 1000);
     }
-    await ns.sleep(15000);
+
+    await ns.sleep(1000);
   }
 }

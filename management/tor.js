@@ -9,4 +9,8 @@ export async function main(ns) {
 
     await ns.sleep(60000);
   }
+
+  while(ns.run('purchase-programs.js') === 0){
+    await ns.sleep(100);
+  }
 }

@@ -7,6 +7,14 @@ import {getFreeRam} from "./helpers";
  * @returns {{hack: number, grow: number, debug: boolean, growWeaken: number, hackWeaken: number}}
  */
 export async function getReapThreads(ns, hostname, reapPercentage) {
+  if(ns.fileExists('formulas.exe')) {
+    //ns.tprint("We have formulas to calculate reap");
+    let server = ns.getServer(hostname);
+    let player = ns.getPlayer();
+    let hackPercentage = ns.formulas.hacking.hackPercent(server, player);
+    let formulaHackThreads = Math.max(5/hackPercentage);
+    server.moneyAvailable -= server.moneyMax*formulaHackThreads*hackPercentage
+  }
   if (ns.fileExists('/reap/reap-' + hostname + '-'+reapPercentage.toString() + '.txt')) {
     let reapConfigJson = await ns.read('/reap/reap-' + hostname + '-'+reapPercentage.toString() + '.txt');
     let reapConfig = JSON.parse(reapConfigJson);
@@ -77,7 +85,7 @@ export async function executeReap(ns, reapConfig, target, executor, offset, perc
     let growWeakenPid = ns.exec(reapScripts.weaken, executor, reapConfig.growWeaken, target, reapTimings.growWeakenSleep+offset, "Reap Grow Weaken", Date.now());
 
     if(hackPid === 0 || hackWeakenPid === 0 || growPid === 0 || growWeakenPid === 0){
-      ns.toast("Failed to create proper reap", 'error');
+      ns.toast("Failed to create proper reap for " + target + " on " + executor, 'error');
       ns.print("Failed to create proper reap PIDS (" + hackPid + ", " + hackWeakenPid + ", " + growPid + ", " + growWeakenPid + ")" );
     }
 

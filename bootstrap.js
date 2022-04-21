@@ -8,6 +8,8 @@ export async function main(ns) {
   ns.tprintf("Removing unused Files:")
   ns.tprintf("Removing cycle-config.txt");
   ns.rm('/temp/cycle-config.txt')
+  ns.rm('/tasks.txt')
+  ns.rm('/threadCounts.txt')
   ns.tprintf("Removing dynamic augment data...")
   let augmentFiles = ns.ls('home', '/temp/augment')
   for(let i = 0; i < augmentFiles.length; i++){
@@ -20,11 +22,27 @@ export async function main(ns) {
   while(ns.isRunning(cycleConfigPid, 'home')){
     await ns.sleep(100);
   }
+  let cycleStatePid = ns.exec('/debug/cycle.js', 'home')
+  while(ns.isRunning(cycleStatePid, 'home')){
+    await ns.sleep(100);
+  }
+
   ns.exec('clear-reap-config.js', 'home');
-  ns.exec('test-targeting.js', 'home');
-  ns.exec('/management/tor.js', 'home');
-  ns.exec('/management/cycle.js', 'home')
-  ns.exec('/daemon.js', 'home');
+  if(ns.exec('test-targeting.js', 'home') === 0){
+    ns.tprintf("Failed to start automated hacking systems")
+  }
+  if(ns.exec('/management/tor.js', 'home') === 0){
+    ns.tprintf("Failed to start automatic onion router management system")
+  };
+  if(ns.exec('/daemon.js', 'home') === 0){
+    ns.tprintf("Failed to initalize thread management daemon.")
+  };
   ns.exec('/probe.js', 'home');
+  await ns.sleep(100);
   ns.tail('/probe.js', 'home');
+
+  if(ns.exec('/dashboard/cycle.js', 'home') !== 0){
+    await ns.sleep(100);
+    ns.tail('/dashboard/cycle.js', 'home')
+  }
 }

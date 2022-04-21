@@ -1,5 +1,5 @@
 const argsSchema = [
-  ['value', ''],
+  ['value', '[[38,45,40,24,7,16,25,23,26,15,14,7],[23,14,47,30,17,25,50,33,38,40,25,29],[50,18,35,45,31,11,28,41,42,14,42,14]]'],
 ]
 
 const EAST = 0;
@@ -53,7 +53,7 @@ export async function main(ns) {
       }
     }
 
-    if(xStop <= xStart && xStop === currX && yStart >= yStop && yStop === currY){
+    if(xStop < xStart || yStop < yStart){
       answer.push(spiralMatrix[currY][currX])
       break;
     }

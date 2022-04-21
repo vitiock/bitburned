@@ -2,7 +2,8 @@ import { getOwnedServers, nFormatter } from './helpers.js'
 
 /** @param {NS} ns **/
 export async function main(ns) {
-	ns.disableLog('sleep');	
+	ns.disableLog('sleep');
+	ns.tail();
 
 	while(true) {
 		let hostList = getOwnedServers(ns);

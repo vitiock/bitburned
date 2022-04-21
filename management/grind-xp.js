@@ -11,11 +11,11 @@ export async function main(ns) {
     let name = targets.pop();
     scanned.push(name);
 
-    let server = ns.getServer(name);
+    let server = await ns.getServer(name);
     hostList.push(server);
     if (name.startsWith('hax-')) {
     } else if (server.hasAdminRights && server.requiredHackingSkill <= ns.getPlayer().hacking) {
-      let hosts = ns.scan(name);
+      let hosts = await ns.scan(name);
       for (let i = 0; i < hosts.length; i++) {
         if (!scanned.includes(hosts[i])) {
           targets.push(hosts[i]);
@@ -34,17 +34,20 @@ export async function main(ns) {
 
   while( true ) {
     let totalWeak = 0;
-    useIdleThreads.map(server => {
+    for(let i = 0; i < useIdleThreads.length; i++){
+      let server = useIdleThreads[i]
       let executor = ns.getServer(server.hostname);
       let threads = (executor.maxRam - executor.ramUsed) / ns.getScriptRam('/remote/doGrow.js');
       if (Math.floor(threads) > 0) {
         //ns.tprint("boop: " + server.hostname + " " + threads);
-        ns.exec('/remote/doGrow.js', server.hostname, Math.floor(threads), 'joesguns', 0);
+        await ns.scp('/remote/doGrow.js', server.hostname);
+        await ns.exec('/remote/doGrow.js', server.hostname, Math.floor(threads), 'joesguns', 0);
         totalWeak += Math.floor(threads);
       }
-    })
+    }
 
     ns.toast("Scheduled  " + totalWeak + " threads of grow against joes");
-    await ns.sleep(ns.getWeakenTime('joesguns')+150);
+    let sleepTime = await ns.getWeakenTime('joesguns')+50;
+    await ns.sleep(sleepTime);
   }
 }

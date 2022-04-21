@@ -7,7 +7,7 @@ export async function main(ns) {
     if(ns.ls(server.hostname, "cct").length > 0) {
       let contracts = ns.ls(server.hostname, "cct");
       for(let i = 0; i < contracts.length; i++){
-        ns.toast("Attempting to solve \"" + ns.codingcontract.getContractType(contracts[i], server.hostname) + "\"", 'info', null)
+        //ns.toast("Attempting to solve \"" + ns.codingcontract.getContractType(contracts[i], server.hostname) + "\"", 'info', null)
         if(ns.codingcontract.getContractType(contracts[i], server.hostname) === "Unique Paths in a Grid I") {
           let contractPid = ns.exec('/contract/unique-paths-grid-one.js', 'home', 1, '--value', JSON.stringify(ns.codingcontract.getData(contracts[i], server.hostname)))
           while(ns.isRunning(contractPid, 'home')){
@@ -71,7 +71,7 @@ export async function main(ns) {
           let reward = ns.codingcontract.attempt(result, contracts[i], server.hostname, {returnReward: true})
           ns.toast(contractType + ": " + reward, 'info', null);
         } else if(ns.codingcontract.getContractType(contracts[i], server.hostname) === "Find Largest Prime Factor") {
-          let contractPid = ns.exec('/contract/prime-factorization.js', 'home', 1, '--value', ns.codingcontract.getData(contracts[i], server.hostname))
+          /*let contractPid = ns.exec('/contract/prime-factorization.js', 'home', 1, '--value', ns.codingcontract.getData(contracts[i], server.hostname))
           while(ns.isRunning(contractPid, 'home')){
             await ns.sleep(10);
           }
@@ -80,7 +80,7 @@ export async function main(ns) {
           ns.tprint("Expected answer: " + result);
           let contractType = ns.codingcontract.getContractType(contracts[i], server.hostname)
           let reward = ns.codingcontract.attempt(result, contracts[i], server.hostname, {returnReward: true})
-          ns.toast(contractType + ": " + reward, 'info', null);
+          ns.toast(contractType + ": " + reward, 'info', null);*/
         } else if(ns.codingcontract.getContractType(contracts[i], server.hostname) === "Sanitize Parentheses in Expression") {
           let contractPid = ns.exec('/contract/parens.js', 'home', 1, '--value', ns.codingcontract.getData(contracts[i], server.hostname))
           while(ns.isRunning(contractPid, 'home')){
@@ -172,7 +172,17 @@ export async function main(ns) {
           let contractType = ns.codingcontract.getContractType(contracts[i], server.hostname)
           let reward = ns.codingcontract.attempt(result, contracts[i], server.hostname, {returnReward: true})
           ns.toast(contractType + ": " + reward, 'info', null);
-        } else {
+        } else if (ns.codingcontract.getContractType(contracts[i], server.hostname) === "Shortest Path in a Grid") {
+
+        } else if (ns.codingcontract.getContractType(contracts[i], server.hostname) === "Array Jumping Game II") {
+
+        }else if (ns.codingcontract.getContractType(contracts[i], server.hostname) === "Total Ways to Sum II") {
+
+        }else if (ns.codingcontract.getContractType(contracts[i], server.hostname) === "HammingCodes: Encoded Binary to Integer") {
+
+        }else if (ns.codingcontract.getContractType(contracts[i], server.hostname) === "HammingCodes: Integer to encoded Binary") {
+
+        }else {
           ns.toast("No solver for \"" + ns.codingcontract.getContractType(contracts[i], server.hostname) + "\"", 'error')
         }
       }

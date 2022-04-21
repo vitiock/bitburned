@@ -27,17 +27,9 @@ export async function main(ns) {
   weakenThreads += 5;
 
   if( hacked > 0) {
-    if (flags['expectedweakens'] != weakenThreads) {
-      ns.toast("Expected threads: " + flags['expectedweakens'] + " Actual weaken threads required: " + weakenThreads, 'info', 5000);
-    }
-
-
     let growThreads = Math.ceil(ns.growthAnalyze(flags['target'], server.moneyMax / server.moneyAvailable)) + 5;
-    if (flags['expectedgrows'] != growThreads) {
-      ns.toast('Expected grow threads: ' + flags['expectedgrows'] + " Actual grow threads required: " + Math.ceil(growThreads), 'info', 5000);
-    }
 
-    if (flags['expectedgrows'] != growThreads || flags['expectedweakens'] != weakenThreads) {
+    if (flags['expectedgrows'] !== growThreads || flags['expectedweakens'] !== weakenThreads) {
       try {
         let reapJson = ns.read('/reap/reap-' + flags['target'] + '-' + flags['reapPercentage'] + '.txt');
         let reapConfig = JSON.parse(reapJson);
@@ -53,15 +45,12 @@ export async function main(ns) {
         let reapJson = ns.read('/reap/reap-' + flags['target'] + '-' + flags['reapPercentage'] + '.txt');
         let reapConfig = JSON.parse(reapJson);
         reapConfig.hackDebug = false;
+        ns.toast("Removing debug from hack config");
         await ns.write('/reap/reap-' + flags['target'] + '-' + flags['reapPercentage'] + '.txt', JSON.stringify(reapConfig), 'w');
         await ns.scp('/reap/reap-' + flags['target'] + '-' + flags['reapPercentage'] + '.txt', 'home');
       } catch (e) {
         ns.print("Looks like debug was set despite debug already being run");
       }
     }
-
-    ns.toast("Hacked " + hacked + " moneys from: " + flags['target']);
-  } else {
-    ns.toast("Failed to hack " + flags['target']);
   }
 }

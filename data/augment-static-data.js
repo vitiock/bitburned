@@ -8,6 +8,24 @@ let factionNames = [
   'CyberSec',
   'The Black Hand',
   'BitRunners',
+  'Daedalus',
+  'Sector-12',
+  'Netburners',
+  'MegaCorp',
+  'OmniTek Incorporated',
+  'ECorp',
+  'KuaiGong International',
+  'NWO',
+  'Blade Industries',
+  'Bachman & Associates',
+  'Clarke Incorporated',
+  'Fulcrum Secret Technologies',
+  'The Covenant',
+  'Illuminati',
+  'New Tokyo',
+  'Ishima',
+  'Aevum',
+  'Volhaven'
 ]
 
 /**

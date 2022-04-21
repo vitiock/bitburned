@@ -1,5 +1,4 @@
-import {canReap, getExploitableServers} from './targeting.js'
-import {getFreeRam, getOwnedServers} from "./helpers";
+import {getFreeRam, getOwnedServers} from "/helpers";
 import {calculateReapRam, executeReap, getReapThreads, getReapTimings} from "./reap";
 
 const GROW = "grow";
@@ -12,22 +11,76 @@ let activeThreads = {};
 let reapEndAfter = {};
 let maxGainSeen = {};
 
-function clearFinishedTasks(ns) {
+function auditTasks(ns) {
+  let threadCounts = {};
   for(let i = 0; i < tasks.length; i++){
-    if(tasks[i].pid === 0){
-      continue;
+    if (threadCounts[tasks[i].target]) {
+      threadCounts[tasks[i].target][tasks[i].action] += tasks[i].threads;
+    } else {
+      threadCounts[tasks[i].target] = {
+        hack: 0,
+        grow: 0,
+        weaken: 0,
+      }
+      threadCounts[tasks[i].target][tasks[i].action] += tasks[i].threads;
     }
+  }
 
-    if(!ns.isRunning(tasks[i].pid, tasks[i].host)){
+  for(let key of Object.keys(threadCounts)){
+    if(threadCounts[key].grow !== activeThreads[key].grow){
+      ns.tprint("Grow thread counts mismatch");
+    }
+    if(threadCounts[key].hack !== activeThreads[key].hack){
+      ns.tprint("Grow thread counts mismatch");
+    }
+    if(threadCounts[key].weaken !== activeThreads[key].weaken){
+      ns.tprint("Grow thread counts mismatch");
+    }
+  }
 
-      tasks[i].pid = 0;
-      if(activeThreads[tasks[i].target] && activeThreads[tasks[i].target][tasks[i].action] > 0) {
-        activeThreads[tasks[i].target][tasks[i].action] -= tasks[i].threads;
+  for(let key of Object.keys(activeThreads)) {
+    if (threadCounts[key]) {
+      if (activeThreads[key].grow !== 0 && threadCounts[key].grow !== activeThreads[key].grow) {
+        ns.tprint("Grow thread counts mismatch");
+      }
+      if (activeThreads[key].hack !== 0 && threadCounts[key].hack !== activeThreads[key].hack) {
+        ns.tprint("Grow thread counts mismatch");
+      }
+      if (activeThreads[key].weaken !== 0 && threadCounts[key].weaken !== activeThreads[key].weaken) {
+        ns.tprint("Grow thread counts mismatch");
+      }
+    } else {
+      if(activeThreads[key].grow !== 0 || activeThreads[key].hack !== 0 || activeThreads[key].weaken !== 0) {
+        ns.tprint("No thread counts for " + key)
+        ns.tprint(JSON.stringify(activeThreads[key], null, 2));
       }
     }
   }
 
-  tasks = tasks.filter( task => task.pid !== 0);
+  activeThreads = threadCounts;
+}
+
+async function clearFinishedTasks(ns) {
+  let removed = 0;
+  let kept = 0;
+    for (let i = 0; i < tasks.length; i++) {
+      if (tasks[i].pid === 0) {
+        continue;
+      }
+
+      if (!ns.isRunning(tasks[i].pid, tasks[i].host)) {
+        removed++;
+        tasks[i].pid = 0;
+        if (activeThreads[tasks[i].target]) {
+          activeThreads[tasks[i].target][tasks[i].action] -= tasks[i].threads;
+        }
+      } else {
+        kept++;
+      }
+    }
+
+    tasks = tasks.filter(task => task.pid !== 0);
+    ns.print("Kept " + kept + " tasks and removed " + removed);
 }
 
 /**
@@ -124,7 +177,6 @@ async function scheduleWeaken(ns, job){
   let lastHost = '';
   for(let i = 0; i < servers.length; i++){
     let server = servers[i];
-    ns.print("Attempting to schedule weaken on " + server.hostname);
     let remainingThreads = job.weakenThreads - totalScheduled;
     if(remainingThreads <= 0) {
       return;
@@ -135,7 +187,7 @@ async function scheduleWeaken(ns, job){
     if( threadsToRun > 0) {
       await ns.scp('/remote/doWeaken.js', 'home', server.hostname)
       let pid = ns.exec('/remote/doWeaken.js', server.hostname, threadsToRun, job.target, 0)
-      if ( pid != 0) {
+      if ( pid !== 0) {
         totalScheduled += threadsToRun;
         lastPid = pid;
         lastHost = server.hostname;
@@ -144,7 +196,6 @@ async function scheduleWeaken(ns, job){
   }
 
   if (totalScheduled > startingThreads) {
-    ns.toast("Executed " + (totalScheduled-startingThreads) + " weaken threads against " + job.target);
     addTask({
       pid: lastPid,
       target: job.target,
@@ -154,7 +205,6 @@ async function scheduleWeaken(ns, job){
     });
     return true;
   }
-
   return false;
 }
 
@@ -171,62 +221,69 @@ async function scheduleReap(ns, job) {
   servers = servers.sort( (a, b) => getFreeRam(b) - getFreeRam(a));
 
   let maxRamAvailable = getFreeRam(servers[0]);
-  let percentage = 5;
+  let percentage = 15;
   let reapConfig = await getReapThreads(ns, job.target, percentage);
   let requiredRam = calculateReapRam(ns, reapConfig)
-
-  while(maxRamAvailable < requiredRam && percentage > 0){
-    percentage = percentage - .5;
-    reapConfig = await getReapThreads(ns, job.target, percentage);
-    requiredRam = calculateReapRam(ns, reapConfig)
-  }
-
-  let reapOffset = 0;
-  if(reapEndAfter[job.target] > 0){
-    reapOffset = reapEndAfter[job.target] - Date.now() + 1000;
-    if(reapOffset < 0){
-      reapOffset = 0;
-    }
-  }
-
-  if(percentage > 0) {
-    let pids = await executeReap(ns, reapConfig, job.target, servers[0].hostname, reapOffset, percentage)
-    if (pids != null) {
-      addTask({
-        target: job.target,
-        action: HACK,
-        threads: reapConfig.hack,
-        host: servers[0].hostname,
-        pid: pids.hackPid
-      });
-
-      addTask({
-        target: job.target,
-        action: WEAKEN,
-        threads: reapConfig.hackWeaken,
-        host: servers[0].hostname,
-        pid: pids.hackWeakenPid
-      });
-
-      addTask({
-        target: job.target,
-        action: GROW,
-        threads: reapConfig.grow,
-        host: servers[0].hostname,
-        pid: pids.growPid
-      });
-
-      addTask({
-        target: job.target,
-        action: WEAKEN,
-        threads: reapConfig.growWeaken,
-        host: servers[0].hostname,
-        pid: pids.growWeakenPid
-      });
+  let reaping = true;
+  let itter = 0;
+  while(reaping === true && itter < 60) {
+    reaping = false;
+    itter++;
+    while (maxRamAvailable < requiredRam && percentage > 0) {
+      percentage = percentage - .5;
+      reapConfig = await getReapThreads(ns, job.target, percentage);
+      requiredRam = calculateReapRam(ns, reapConfig)
     }
 
     let reapTimings = getReapTimings(ns, job.target);
-    reapEndAfter[job.target] = Date.now()+reapOffset+reapTimings.timeToExecute;
+    let reapOffset = 0;
+    if (reapEndAfter[job.target] > 0) {
+      reapOffset = reapEndAfter[job.target] - Date.now() + 1000 - reapTimings.timeToExecute;
+      if (reapOffset < 0) {
+        reapOffset = 0;
+      }
+    }
+
+    if (percentage > 0 && reapOffset < 1000*60) {
+      let pids = await executeReap(ns, reapConfig, job.target, servers[0].hostname, reapOffset, percentage)
+      if (pids != null) {
+        reaping = true;
+        ns.print("Scheduled reap against: " + job.target + " for " + percentage + "%");
+        addTask({
+          target: job.target,
+          action: HACK,
+          threads: reapConfig.hack,
+          host: servers[0].hostname,
+          pid: pids.hackPid
+        });
+
+        addTask({
+          target: job.target,
+          action: WEAKEN,
+          threads: reapConfig.hackWeaken,
+          host: servers[0].hostname,
+          pid: pids.hackWeakenPid
+        });
+
+        addTask({
+          target: job.target,
+          action: GROW,
+          threads: reapConfig.grow,
+          host: servers[0].hostname,
+          pid: pids.growPid
+        });
+
+        addTask({
+          target: job.target,
+          action: WEAKEN,
+          threads: reapConfig.growWeaken,
+          host: servers[0].hostname,
+          pid: pids.growWeakenPid
+        });
+      }
+
+      reapEndAfter[job.target] = Date.now() + reapOffset + reapTimings.timeToExecute;
+    }
   }
 }
 
@@ -236,7 +293,6 @@ async function scheduleReap(ns, job) {
  * @returns
  */
 async function scheduleGrow(ns, job){
-  ns.print("scheduling grow against " + job.target)
   clearReapsForHost(ns, job.target);
   let totalScheduled = 0;
   let startingThreads = 0;
@@ -259,7 +315,6 @@ async function scheduleGrow(ns, job){
     let canRunThreads = Math.floor(freeRam / ns.getScriptRam('/remote/doGrow.js'));
     let threadsToRun = Math.min(canRunThreads, remainingThreads);
     if( threadsToRun > 0) {
-      ns.print("Remaining threads: " + threadsToRun);
       let calculateWeakensForGrow = (growThreads) => {
         let weakenThreads = 2;
         while (ns.weakenAnalyze(weakenThreads-1) < ns.growthAnalyzeSecurity(growThreads)) {
@@ -273,7 +328,6 @@ async function scheduleGrow(ns, job){
       }
       let weakenThreads = calculateWeakensForGrow(threadsToRun);
       if(threadsToRun <= 0 || weakenThreads <= 0) {
-        ns.print("Too little ram to run grow on " + server.hostname);
         continue;
       }
 
@@ -294,18 +348,15 @@ async function scheduleGrow(ns, job){
           ns.toast("Failed to schedule weakens for grow pid:" + pid + " threads: " + weakenThreads, 'error');
         }
       }
-    } else {
-      ns.print("Threads to run < 0");
     }
   }
 
   if (totalScheduled-startingThreads > 0) {
-    ns.toast("Executed " + (totalScheduled-startingThreads) + " Grow threads against " + job.target + " when " + job.growThreads + " were required");
     addTask({
       pid: lastPid,
       target: job.target,
       action: GROW,
-      threads: totalScheduled,
+      threads: totalScheduled-startingThreads,
       host: lastHost
     });
     addTask({
@@ -329,13 +380,17 @@ async function scheduleGrow(ns, job){
  */
 function createJobsForServers(ns, servers) {
   let jobs = [];
-  ns.print("Starting plan");
   for(let i = 0; i < servers.length; i++) {
     let server = servers[i]
-    ns.print(server.hostname);
-    if( server.minDifficulty !== server.hackDifficulty) {
+    if( server.hackDifficulty - server.minDifficulty < 5 && server.moneyAvailable/server.moneyMax > .8 && activeThreads[server.hostname] && activeThreads[server.hostname].hack > 0 && i < 5){
+      jobs.push({
+        target: server.hostname,
+        task: REAP,
+        requiredMem: 1
+      })
+    } else if( server.minDifficulty !== server.hackDifficulty && server.hasAdminRights) {
       jobs.push(createWeakenJob(ns, server));
-    } else if (server.moneyAvailable !== server.moneyMax) {
+    } else if (server.moneyAvailable !== server.moneyMax && server.hasAdminRights) {
       jobs.push(createGrowJob(ns, server));
     } else if(i < 5){
       jobs.push({
@@ -353,52 +408,51 @@ function createJobsForServers(ns, servers) {
 export async function main(ns) {
   ns.disableLog('scan');
   ns.disableLog('scp');
+  ns.disableLog('exec');
     ns.tprint("Starting Hack Manager");
 
     if(ns.fileExists('tasks.txt')){
-      ns.tprint("Loading existing tasks");
       tasks = JSON.parse(ns.read('tasks.txt'));
     } else {
       tasks = [];
     }
 
     if(ns.fileExists('threadCounts.txt')) {
-      ns.tprint('Loading existing active threads');
       activeThreads = JSON.parse(ns.read('threadCounts.txt'));
     } else {
       activeThreads = {};
     }
+
+    let lastAudit = Date.now()-50000;
+
     while(true) {
-      clearFinishedTasks(ns);
+      if(Date.now() - lastAudit > 60* 1000){
+        lastAudit = Date.now();
+        auditTasks(ns);
+      }
+      await clearFinishedTasks(ns);
       let servers;
       if (ns.fileExists('formulas.exe', 'home')) {
         // Calculate server profitability order
-        let hosts = getOwnedServers(ns);
-        hosts = hosts.filter(server => server.moneyAvailable > 0);
-        hosts.sort((a, b) => {
-          if (a.moneyMax === b.moneyMax) {
-            return b.minDifficulty - a.minDifficulty
-          } else {
-            return b.moneyMax - a.moneyMax;
-          }
-        })
-        servers = hosts;
+        ns.print("We have formulas")
       } else {
-
-        let hosts = getOwnedServers(ns);
-        hosts = hosts.filter(server => server.moneyAvailable > 0);
-        hosts.map( server => {
-          if(!maxGainSeen[server.hostname] || maxGainSeen[server.hostname] < ns.hackAnalyze(server.hostname) * server.moneyAvailable) {
-            maxGainSeen[server.hostname] = ns.hackAnalyze(server.hostname) * server.moneyAvailable;
-          }
-        })
-        hosts.sort((a, b) => {
-          return maxGainSeen[b.hostname] - maxGainSeen[a.hostname]
-        })
-        servers = hosts;
       }
 
+      let hosts = getOwnedServers(ns);
+      hosts = hosts.filter(server => server.moneyAvailable > 0);
+      hosts.map( server => {
+        if(!maxGainSeen[server.hostname] || maxGainSeen[server.hostname] < ns.hackAnalyze(server.hostname) * server.moneyAvailable) {
+          maxGainSeen[server.hostname] = ns.hackAnalyze(server.hostname) * server.moneyAvailable;
+        }
+      })
+      hosts.sort((a, b) => {
+        return maxGainSeen[b.hostname] - maxGainSeen[a.hostname]
+      })
+      servers = hosts;
+
+
       let jobs = createJobsForServers(ns, servers)
+
 
       for(let i = 0; i < jobs.length; i++){
         let job = jobs[i];
@@ -422,6 +476,7 @@ export async function main(ns) {
         if (Math.floor(threads) > 0) {
           await ns.scp('/remote/doGrow.js', 'home', executor.hostname)
 
+
           let idlePid = ns.exec('/remote/doGrow.js', executor.hostname, Math.floor(threads), '--target', 'joesguns', '--manipulateStock', true);
           if(idlePid != 0) {
             totalGrows += Math.floor(threads);
@@ -435,9 +490,6 @@ export async function main(ns) {
           }
 
         }
-      }
-      if(totalGrows > 0) {
-        ns.toast("Idled " + totalGrows + " threads, growing Joe's Guns");
       }
 
       await ns.write('tasks.txt', JSON.stringify(tasks), 'w');

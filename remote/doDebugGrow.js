@@ -24,11 +24,6 @@ export async function main(ns) {
   }
   weakenThreads += 2;
 
-  if(flags['expectedweakens'] != weakenThreads) {
-    ns.toast("Expected threads: " + flags['expectedweakens'] + " Actual weaken threads required: " + weakenThreads, 'info', 5000);
-  }
-
-
   if(flags['expectedweakens'] != weakenThreads){
     try {
       let reapJson = ns.read('/reap/reap-' + flags['target'] + '-' + flags['reapPercentage'] + '.txt');
