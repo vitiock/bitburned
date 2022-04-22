@@ -101,9 +101,11 @@ export async function main(ns) {
         augment.name === 'CashRoot Starter Kit') {
       return true;
     }
+
+    /* commented out since we want to earn enough money to get all dem sleeves
     if(ownedAugments > 30 && augment.name === 'The Red Pill') {
       return true;
-    }
+    }*/
     return false;
   });
 

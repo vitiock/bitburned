@@ -79,7 +79,8 @@ export async function executeReap(ns, reapConfig, target, executor, offset, perc
     await ns.scp(reapScripts.weaken, 'home', executor)
     await ns.scp('/reap/reap-'+target+'-'+percentage+'.txt', 'home', executor);
     //TODO: Move to use scripts that have start time vs sleep time to reduce imprecision of script start
-    let hackPid = ns.exec(reapScripts.hack, executor, reapConfig.hack, '--target', target, '--sleep', reapTimings.hackSleep+offset, '--expectedweakens', reapConfig.hackWeaken, '--expectedgrows', reapConfig.grow, '--reapPercentage', percentage);
+    let hackExpectedEndTime = Date.now()+reapTimings.hackSleep+offset+ns.getHackTime(target);
+    let hackPid = ns.exec(reapScripts.hack, executor, reapConfig.hack, '--target', target, '--sleep', reapTimings.hackSleep+offset, '--expectedweakens', reapConfig.hackWeaken, '--expectedgrows', reapConfig.grow, '--reapPercentage', percentage, '--expectedEndTime', hackExpectedEndTime);
     let hackWeakenPid = ns.exec(reapScripts.weaken, executor, reapConfig.hackWeaken, target, reapTimings.hackWeakenSleep+offset, "Reap Hack Weaken", Date.now());
     let growPid = ns.exec(reapScripts.grow, executor, reapConfig.grow, '--target', target, '--sleep', reapTimings.growSleep+offset, '--expectedweakens', reapConfig.growWeaken, '--reapPercentage', percentage);
     let growWeakenPid = ns.exec(reapScripts.weaken, executor, reapConfig.growWeaken, target, reapTimings.growWeakenSleep+offset, "Reap Grow Weaken", Date.now());

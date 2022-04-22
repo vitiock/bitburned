@@ -141,10 +141,7 @@ export function formatMoney(num, digits) {
  */
 export function getFreeRam(server) {
   if (server.hostname === 'home') {
-    return server.maxRam - server.ramUsed - 3500;
-  }
-  if(server.hostname === 'hax-0') {
-    return 0;
+    return server.maxRam - server.ramUsed - 500;
   }
   return server.maxRam - server.ramUsed;
 }
@@ -221,4 +218,13 @@ export function fixWidthString(value, desiredLength) {
   let newValue = value.substr(0, desiredLength)
   newValue = newValue.padEnd(desiredLength, ' ')
   return newValue
+}
+
+/**
+ *
+ * @param ns
+ * @returns {Server[]}
+ */
+export function getServers(ns) {
+  return JSON.parse(ns.read('/temp/servers.txt'))
 }

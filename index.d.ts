@@ -7242,3 +7242,26 @@ export interface CycleState {
   cycleDuration: number;
   currentPhase: string;
 }
+
+export interface Server {
+  cpuCores: number;
+  ftpPortOpen: boolean;
+  hasAdminRights: boolean;
+  hostname: string;
+  ip: string;
+  maxRam: number;
+  organizationName: string;
+  sshPortOpen: boolean;
+  purchasedByPlayer: boolean;
+  backdoorInstalled: boolean;
+  baseDifficulty: number;
+  hackDifficulty: number;
+  minDifficulty: number;
+  moneyAvailable: number;
+  moneyMax: number;
+  numOpenPortsRequired: number;
+  openPortCount: number;
+  requiredHackingSkill: number;
+  serverGrowth: number;
+  neighbors: string[];
+}

@@ -305,7 +305,6 @@ export async function main(ns) {
     }
   }
 
-  if(cycleState.cycleDuration < 90 * 60 * 1000) {
     for (let i = 0; i < cycleFactions.length; i++) {
       if (!cycleFactions[i].inFaction) {
         log.info(ns, "Not in faction: " + cycleFactions[i].name)
@@ -315,7 +314,6 @@ export async function main(ns) {
         })
       }
     }
-  }
 
     for (let i = 0; i < cycleFactions.length; i++) {
       let requiredRep = 0;
@@ -345,7 +343,7 @@ export async function main(ns) {
     moneys += allAugments[i].price;
   }
 
-  if(moneys >= ns.getPlayer().money && (cycleState.cycleDuration < 60 * 3 *60 * 1000 || ns.getPlayer().money/moneys > .75)) {
+  if(moneys >= ns.getPlayer().money) {
     actions.push({
       action: ACTION_MONEY,
       value: Math.floor(moneys - ns.getPlayer().money)

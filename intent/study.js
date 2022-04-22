@@ -1,6 +1,7 @@
 const argsSchema = [
   ['course', 'Study Computer Science'],
-  ['university', 'rothman university']
+  ['university', 'rothman university'],
+  ['focus', false]
 ]
 
 /**
@@ -12,9 +13,8 @@ export async function main(ns) {
   if(ns.getPlayer().workType === 'Studying or taking a class at university'){
     ns.toast("Already studying");
   } else {
-    ns.toast("Studying " + flags['course'] + " at " + flags['university']);
-    ns.universityCourse(flags['university'], flags['course'])
+    ns.toast("Studying " + flags.course + " at " + flags.university);
+    ns.universityCourse(flags.university, flags.course, flags.focus)
   }
   await ns.sleep(60 * 1000);
-  ns.stopAction();
 }

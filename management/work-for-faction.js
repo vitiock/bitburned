@@ -39,12 +39,16 @@ export async function main(ns) {
 
   if(!favoredWork[flags['targetFaction']]) {
     // Just exit if we don't know how to work this faction
+    ns.toast("No favorite work for " + flags.targetFaction, 'error');
     ns.exit();
   }
 
   ns.tprint("Starting Faction Manager")
   let focused = flags['focus']
-  ns.workForFaction(flags['targetFaction'], favoredWork[flags['targetFaction']], focused);
-  await ns.sleep(flags['duration']);
+  if(!ns.workForFaction(flags['targetFaction'], favoredWork[flags['targetFaction']], focused)){
+    ns.tprint("ERROR: failed to start working for faction");
+  } else {
+    await ns.sleep(flags['duration']);
+  }
   ns.stopAction();
 }

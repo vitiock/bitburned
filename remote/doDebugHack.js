@@ -4,6 +4,7 @@ const argsSchema = [
   ['expectedweakens', 1],
   ['expectedgrows', 1],
   ['reapPercentage', 5],
+  ['expectedEndTime', 0],
 ]
 
 export function autocomplete(data, args) {

@@ -61,6 +61,7 @@ async function redistributeEmployees(ns, division, city, employees){
 
 /** @param {NS} ns **/
 export async function main(ns) {
+  return;
   if(maxes === undefined) {
     maxes = {}
   }

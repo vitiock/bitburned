@@ -1,4 +1,4 @@
-import {formatMoney, loadCycleState} from "./helpers";
+import {formatMoney, getServers, loadCycleState} from "./helpers";
 
 /** @param {NS} ns **/
 let doc = eval("document");
@@ -45,6 +45,10 @@ export async function main(ns) {
       }
       headers.push("Duration");
       values.push(msToHMS(cycleState.cycleDuration));
+
+      let servers = getServers(ns);
+      servers = servers.filter( server => server.hasAdminRights)
+
 
       // Now drop it into the placeholder elements
       hook0.innerText = headers.join(" \n");

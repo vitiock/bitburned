@@ -17,6 +17,8 @@ export async function main(ns) {
     ns.rm(augmentFiles[i])
   }
 
+  ns.exec('/data/generate-server-list.js', 'home');
+
   ns.tprintf("Generating cycle configuration...");
   let cycleConfigPid = ns.exec('/data/generate-cycle-config.js', 'home')
   while(ns.isRunning(cycleConfigPid, 'home')){

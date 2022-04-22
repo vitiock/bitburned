@@ -3,19 +3,18 @@
 import {loadCycleConfig, loadCycleState, nFormatter} from "/helpers";
 
 function getUpperSpend(ns) {
-	let upperSpend = ns.getPlayer().money*.9
+	let upperSpend = ns.getPlayer().money*.75 - 5e6
 
 	return upperSpend
 }
 
 /** @param {NS} ns **/
 export async function main(ns) {
-	return;
 	let cycleState = loadCycleState(ns);
-	if(cycleState.cycleDuration > 90 * 60 * 1000){
+	if(cycleState.actions.filter(action => action.action === 'PURCHASE').length > 0){
+		ns.tprint("Ignoring hacknet since there is a purchase action")
 		return;
 	}
-
 
 	while(ns.hacknet.maxNumNodes() > ns.hacknet.numNodes() && ns.hacknet.getPurchaseNodeCost() < getUpperSpend(ns)) {
 		ns.hacknet.purchaseNode();

@@ -1,11 +1,12 @@
 //let crimes = ['shoplift', 'rob store', 'mug', 'larceny', 'drugs', 'forge bond', 'traffic arms', 'homicide', 'grand auto', 'kidnap', 'assassin', 'heist']
 let crimes = ['shoplift', 'mug', 'homicide']
 const argsSchema = [
-  ['duration', 60000*60],
+  ['duration', 60000000*60],
 ]
 
 /** @param {NS} ns **/
 export async function main(ns) {
+  ns.tail();
   let startTime = Date.now();
   let flags = ns.flags(argsSchema);
   while( true && Date.now() < startTime + flags['duration']) {
