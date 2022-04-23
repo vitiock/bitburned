@@ -5,7 +5,10 @@
     "rootDir": "src/",
     "baseUrl": "src/",
     "paths": {
-      "/lib/*": [ "lib/*" ]
+      "/lib/*": [ "lib/*" ],
+      "/logger/*": [ "logger/*" ],
+      "/help/*": [ "help/*" ],
+      "/cron/*": [ "cron/*" ]
     },
     "outDir": "build/",
     "moduleResolution": "node",

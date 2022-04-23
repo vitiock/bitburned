@@ -3,8 +3,7 @@
 import {loadCycleConfig, loadCycleState, nFormatter} from "/helpers";
 
 function getUpperSpend(ns) {
-	let upperSpend = ns.getPlayer().money*.75 - 5e6
-
+	let upperSpend = (ns.getPlayer().money - 5e6)*.75
 	return upperSpend
 }
 

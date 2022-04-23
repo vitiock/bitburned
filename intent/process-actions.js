@@ -98,7 +98,7 @@ function handleUnlockActions(ns){
       return true;
     } else {
       ns.tprint("Hacking faction probably need more money for hacking servers")
-      doCombat(ns);
+      //doCombat(ns);
       return true;
     }
   }
@@ -156,7 +156,6 @@ function handleRepActions(ns) {
  * @param {NS} ns
  */
 export async function main(ns) {
-  return;
   if(workPid === undefined) {
     workPid = 0;
     crimeStartedAt = 0;

@@ -32,7 +32,7 @@ export async function main(ns) {
     }, {
       type: 'ALWAYS',
       script: 'intent/spend-hashes.js',
-      rate: 60000 * 5,
+      rate: 5000,
       args: []
     }, {
       type: 'ALWAYS',

@@ -3,6 +3,7 @@
  * @param {NS} ns
  */
 export async function main(ns) {
+  ns.tprint("Spending hashes");
   if(ns.hacknet.numNodes() === 0){
     return;
   }
